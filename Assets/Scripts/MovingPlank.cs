@@ -13,9 +13,11 @@ public class MovingPlank : MonoBehaviour
     [Header("Movement Settings")]
     public float baseSpeed = 2f;
     public bool isMoving = false;
+    public bool movingForward = true; // Direction of travel
     
     [Header("Player Attachment")]
     public Transform xrOrigin; // Assign your XR Origin here
+    public GameObject locomotionSystem; // Assign the Locomotion game object here
     public float attachmentHeight = 0.1f; // How high above plank to place player
     public float detectionRange = 3f; // Range to detect button press
     
@@ -29,9 +31,6 @@ public class MovingPlank : MonoBehaviour
     private Transform playerParent;
     private float ropeLength;
     
-    // XR Input (you'll need to set this up in your Input Action Asset)
-    private bool triggerPressed = false;
-    
     void Start()
     {
         // Calculate rope length for movement calculations
@@ -39,27 +38,15 @@ public class MovingPlank : MonoBehaviour
         {
             ropeLength = Vector3.Distance(startPoint.position, endPoint.position);
         }
-        
+
         // Store original player setup
         if (xrOrigin)
         {
             originalXRPosition = xrOrigin.position;
             playerParent = xrOrigin.parent;
         }
-        
+
         // Position plank at start of rope
-        UpdatePlankPosition();
-    }
-    
-    void Update()
-    {
-        HandleInput();
-        
-        if (isMoving)
-        {
-            MovePlankAlongRope();
-        }
-        
         UpdatePlankPosition();
     }
     
@@ -67,19 +54,21 @@ public class MovingPlank : MonoBehaviour
     {
         // Get right trigger button press using Input System
         bool inputDetected = false;
-        
+
         if (triggerAction != null && triggerAction.action != null)
         {
             inputDetected = triggerAction.action.WasPressedThisFrame();
         }
-        
-        // Handle attachment/detachment
+
+        // Handle attachment/detachment with same button
         if (inputDetected && !playerAttached && IsPlayerNearPlank())
         {
+            // Button pressed when not on board: get on the board
             AttachPlayerToPlank();
         }
         else if (inputDetected && playerAttached)
         {
+            // Button pressed when on board: get off the board
             DetachPlayerFromPlank();
         }
     }
@@ -97,7 +86,6 @@ public class MovingPlank : MonoBehaviour
         if (!xrOrigin || playerAttached) return;
         
         playerAttached = true;
-        isMoving = true;
         
         // Parent the XR Origin to the plank
         xrOrigin.SetParent(transform);
@@ -105,6 +93,12 @@ public class MovingPlank : MonoBehaviour
         // Position player on top of plank
         Vector3 plankTop = transform.position + Vector3.up * attachmentHeight;
         xrOrigin.position = plankTop;
+        
+        // Disable player movement while on plank
+        DisablePlayerMovement();
+        
+        // Start movement
+        StartMovement();
         
         Debug.Log("Player attached to plank and movement started!");
     }
@@ -119,21 +113,68 @@ public class MovingPlank : MonoBehaviour
         // Unparent the XR Origin
         xrOrigin.SetParent(playerParent);
         
+        // Re-enable player movement
+        EnablePlayerMovement();
+        
         Debug.Log("Player detached from plank and movement stopped!");
+    }
+    
+    void Update()
+    {
+        HandleInput();
+
+        if (isMoving)
+        {
+            MovePlankAlongRope();
+        }
+
+        UpdatePlankPosition();
     }
     
     void MovePlankAlongRope()
     {
         if (!startPoint || !endPoint) return;
         
-        // Move along rope path
-        currentPosition += (baseSpeed * Time.deltaTime) / ropeLength;
+        // Calculate movement delta
+        float movementDelta = (baseSpeed * Time.deltaTime) / ropeLength;
         
-        // Loop back to start when reaching end
-        if (currentPosition >= 1f)
+        // Apply movement based on direction
+        if (movingForward)
         {
-            currentPosition = 0f;
+            currentPosition += movementDelta;
+            
+            // Check if reached end point
+            if (currentPosition >= 1f)
+            {
+                currentPosition = 1f;
+                ReachedEndpoint();
+            }
         }
+        else
+        {
+            currentPosition -= movementDelta;
+            
+            // Check if reached start point
+            if (currentPosition <= 0f)
+            {
+                currentPosition = 0f;
+                ReachedEndpoint();
+            }
+        }
+    }
+    
+    void ReachedEndpoint()
+    {
+        // Stop movement and detach player
+        isMoving = false;
+
+        // Automatically detach player when reaching endpoint
+        DetachPlayerFromPlank();
+
+        // Reverse direction for next time
+        movingForward = !movingForward;
+
+        Debug.Log($"Reached endpoint! Player automatically detached. Next travel will go {(movingForward ? "forward" : "backward")}");
     }
     
     void UpdatePlankPosition()
@@ -176,12 +217,17 @@ public class MovingPlank : MonoBehaviour
     // Public methods for external control
     public void StartMovement()
     {
-        isMoving = true;
+        if (playerAttached)
+        {
+            isMoving = true;
+            Debug.Log($"Started moving {(movingForward ? "forward" : "backward")}");
+        }
     }
-    
+
     public void StopMovement()
     {
         isMoving = false;
+        Debug.Log("Movement stopped");
     }
     
     public void SetSpeed(float newSpeed)
@@ -192,6 +238,30 @@ public class MovingPlank : MonoBehaviour
     public bool IsPlayerAttached()
     {
         return playerAttached;
+    }
+    
+    public bool IsMoving()
+    {
+        return isMoving;
+    }
+    
+    // Movement control methods
+    void DisablePlayerMovement()
+    {
+        // Disable the entire locomotion system to prevent all player movement
+        if (locomotionSystem != null)
+        {
+            locomotionSystem.SetActive(false);
+        }
+    }
+
+    void EnablePlayerMovement()
+    {
+        // Re-enable the locomotion system
+        if (locomotionSystem != null)
+        {
+            locomotionSystem.SetActive(true);
+        }
     }
     
     void OnDrawGizmosSelected()
