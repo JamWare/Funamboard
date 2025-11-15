@@ -12,6 +12,7 @@ Library: /Users/jam/Desktop/Cours/RX/Funamboard/Temp/BurstOutput/tempburstlibs/a
 --float-mode=Fast
 --generate-link-xml=Temp/burst.link.xml
 --temp-folder=/Users/jam/Desktop/Cours/RX/Funamboard/Temp/Burst
+--debug=Full
 --key-folder=/Applications/Unity/Hub/Editor/6000.2.6f2/PlaybackEngines/AndroidPlayer
 --decode-folder=/Users/jam/Desktop/Cours/RX/Funamboard/Library/Burst
 --output=/Users/jam/Desktop/Cours/RX/Funamboard/Temp/BurstOutput/tempburstlibs/arm64-v8a/lib_burst_generated
@@ -30,6 +31,7 @@ Library: /Users/jam/Desktop/Cours/RX/Funamboard/Temp/BurstOutput/tempburstlibs/a
 --target-framework=NetFramework
 --generate-link-xml=Temp/burst.link.xml
 --temp-folder=/Users/jam/Desktop/Cours/RX/Funamboard/Temp/Burst
+--debug=Full
 --key-folder=/Applications/Unity/Hub/Editor/6000.2.6f2/PlaybackEngines/AndroidPlayer
 --decode-folder=/Users/jam/Desktop/Cours/RX/Funamboard/Library/Burst
 --output=/Users/jam/Desktop/Cours/RX/Funamboard/Temp/BurstOutput/tempburstlibs/arm64-v8a/lib_burst_generated
@@ -146,6 +148,7 @@ Library: /Users/jam/Desktop/Cours/RX/Funamboard/Temp/BurstOutput/tempburstlibs/a
 --target-framework=NetFramework
 --generate-link-xml=Temp/burst.link.xml
 --temp-folder=/Users/jam/Desktop/Cours/RX/Funamboard/Temp/Burst
+--debug=Full
 --key-folder=/Applications/Unity/Hub/Editor/6000.2.6f2/PlaybackEngines/AndroidPlayer
 --decode-folder=/Users/jam/Desktop/Cours/RX/Funamboard/Library/Burst
 --output=/Users/jam/Desktop/Cours/RX/Funamboard/Temp/BurstOutput/tempburstlibs/arm64-v8a/lib_burst_generated
