@@ -172,8 +172,12 @@ public class MovingPlank : MonoBehaviour
         }
         else
         {
-            // With balance system, player needs to form T-pose to start moving
-            Debug.Log("Player attached to plank - Form T-pose to begin moving!");
+            // Activate balance system when player is on plank
+            if (balanceController)
+            {
+                balanceController.IsActive = true;
+            }
+            Debug.Log("Player attached to plank - Meet balance requirements to move!");
         }
     }
     
@@ -183,6 +187,12 @@ public class MovingPlank : MonoBehaviour
         
         playerAttached = false;
         isMoving = false;
+        
+        // Deactivate balance system when player leaves plank
+        if (balanceController)
+        {
+            balanceController.IsActive = false;
+        }
         
         // Unparent the XR Origin
         xrOrigin.SetParent(playerParent);
@@ -214,11 +224,14 @@ public class MovingPlank : MonoBehaviour
     {
         if (!balanceController) return;
         
-        // Check if player is maintaining good balance (50% threshold)
-        if (balanceController.BalanceScore > 0.5f)
+        // Use the combined final score (orientation × distance × balance)
+        float finalScore = balanceController.FinalScore;
+        
+        // Check if player meets all requirements (50% threshold)
+        if (finalScore > 0.5f)
         {
-            // Calculate speed based on balance
-            float speedMultiplier = balanceSpeedCurve.Evaluate(balanceController.BalanceScore);
+            // Calculate speed based on final combined score
+            float speedMultiplier = balanceSpeedCurve.Evaluate(finalScore);
             currentSpeed = baseSpeed * speedMultiplier * balanceSpeedMultiplier;
             
             // Add base speed even when perfectly balanced
@@ -226,12 +239,12 @@ public class MovingPlank : MonoBehaviour
             
             isMoving = true;
             
-            // Actually move the plank when balanced
+            // Actually move the plank when all requirements met
             MovePlankAlongRope();
         }
         else
         {
-            // Stop if too unbalanced
+            // Stop if requirements not met (orientation, distance, or balance)
             currentSpeed = 0f;
             isMoving = false;
         }

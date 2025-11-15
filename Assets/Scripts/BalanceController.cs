@@ -25,10 +25,12 @@ public class BalanceController : MonoBehaviour
     public float hapticInterval = 0.5f; // Time between haptic pulses
     
     // Public properties
+    public bool IsActive { get; set; } = false; // Controls whether balance system is running
     public float BalanceScore { get; private set; } = 1f; // 0 = completely unbalanced, 1 = perfect balance
     public float BalanceOffset { get; private set; } = 0f; // -1 = left side down, +1 = right side down
     public float OrientationScore { get; private set; } = 1f; // 0 = pointers not horizontal, 1 = perfect horizontal
     public float DistanceScore { get; private set; } = 1f; // 0 = too close, 1 = good separation
+    public float FinalScore => OrientationScore * DistanceScore * BalanceScore; // Combined score for movement
     public bool IsBalanced => BalanceScore > balanceThreshold;
     public bool HasGoodOrientation => OrientationScore > 0.8f;
     public bool HasGoodDistance => DistanceScore > 0.8f;
@@ -62,7 +64,8 @@ public class BalanceController : MonoBehaviour
     
     void Update()
     {
-        if (!leftController || !rightController || !headTransform)
+        // Only run balance calculations when active (player is on plank)
+        if (!IsActive || !leftController || !rightController || !headTransform)
             return;
             
         CalculateBalance();
