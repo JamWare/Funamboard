@@ -23,6 +23,8 @@ public class MovingPlank : MonoBehaviour
     public float minBalanceForMovement = 0.3f; // Minimum balance score needed to move
     [Range(0f, 1f)]
     public float balanceSpeedMultiplier = 1f; // How much balance affects speed (0=no effect, 1=full effect)
+    [Range(0f, 1f)]
+    public float minSpeedWhenUnbalanced = 0.2f; // Minimum speed multiplier when unbalanced (instead of stopping)
     public AnimationCurve balanceSpeedCurve = AnimationCurve.Linear(0, 0, 1, 1); // Maps balance score to speed multiplier
     
     [Header("Player Attachment")]
@@ -227,6 +229,9 @@ public class MovingPlank : MonoBehaviour
         // Use the combined final score (orientation × distance × balance)
         float finalScore = balanceController.FinalScore;
         
+        // Always allow movement, but adjust speed based on balance
+        isMoving = true;
+        
         // Check if player meets all requirements (50% threshold)
         if (finalScore > 0.5f)
         {
@@ -234,20 +239,17 @@ public class MovingPlank : MonoBehaviour
             float speedMultiplier = balanceSpeedCurve.Evaluate(finalScore);
             currentSpeed = baseSpeed * speedMultiplier * balanceSpeedMultiplier;
             
-            // Add base speed even when perfectly balanced
-            currentSpeed = Mathf.Max(currentSpeed, baseSpeed * 0.1f); // At least 10% speed
-            
-            isMoving = true;
-            
-            // Actually move the plank when all requirements met
-            MovePlankAlongRope();
+            // Ensure at least 10% speed when balanced
+            currentSpeed = Mathf.Max(currentSpeed, baseSpeed * 0.1f);
         }
         else
         {
-            // Stop if requirements not met (orientation, distance, or balance)
-            currentSpeed = 0f;
-            isMoving = false;
+            // Apply minimum speed when unbalanced (instead of stopping)
+            currentSpeed = baseSpeed * minSpeedWhenUnbalanced;
         }
+        
+        // Actually move the plank
+        MovePlankAlongRope();
     }
     
     void UpdateUIFeedback()

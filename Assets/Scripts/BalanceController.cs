@@ -144,41 +144,11 @@ public class BalanceController : MonoBehaviour
         if (Time.time - lastHapticTime < hapticInterval)
             return;
             
-        // Priority order: Orientation → Distance → Balance
-        
-        // 1. Check orientation issues (both controllers vibrate)
-        if (OrientationScore < 0.8f)
-        {
-            float orientationIssue = 1f - OrientationScore;
-            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength, orientationIssue);
-            
-            // Both controllers vibrate when orientation is wrong
-            if (leftHapticPlayer != null)
-                leftHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
-            if (rightHapticPlayer != null)
-                rightHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
-                
-            lastHapticTime = Time.time;
-        }
-        // 2. Check distance issues (both controllers vibrate)
-        else if (DistanceScore < 0.8f)
-        {
-            float distanceIssue = 1f - DistanceScore;
-            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength * 0.7f, distanceIssue); // Slightly weaker
-            
-            // Both controllers vibrate when too close together
-            if (leftHapticPlayer != null)
-                leftHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
-            if (rightHapticPlayer != null)
-                rightHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
-                
-            lastHapticTime = Time.time;
-        }
-        // 3. Check balance issues (individual controller vibrates)
-        else if (BalanceScore < 0.8f && Mathf.Abs(BalanceOffset) > 0.1f)
+        // Only vibrate for left/right balance issues
+        if (BalanceScore < 0.8f && Mathf.Abs(BalanceOffset) > 0.1f)
         {
             float imbalance = 1f - BalanceScore;
-            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength * 0.5f, imbalance); // Weakest
+            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength, imbalance);
             
             // Vibrate the controller on the side that's out of balance
             if (BalanceOffset < -0.1f && leftHapticPlayer != null)

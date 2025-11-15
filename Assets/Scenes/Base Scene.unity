@@ -2972,6 +2972,7 @@ MonoBehaviour:
   useBalanceSystem: 1
   minBalanceForMovement: 0.45
   balanceSpeedMultiplier: 1
+  minSpeedWhenUnbalanced: 0.055
   balanceSpeedCurve:
     serializedVersion: 2
     m_Curve:
