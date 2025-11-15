@@ -241,31 +241,48 @@ public class MovingPlank : MonoBehaviour
     {
         if (balanceText != null && balanceController != null)
         {
-            balanceText.text = $"Balance: {(balanceController.BalanceScore * 100f):F0}%\n" +
+            // Show detailed breakdown of all scores
+            balanceText.text = $"Orientation: {(balanceController.OrientationScore * 100f):F0}%\n" +
+                              $"Distance: {(balanceController.DistanceScore * 100f):F0}%\n" +
+                              $"Balance: {(balanceController.BalanceScore * 100f):F0}%\n" +
                               $"Side: {(balanceController.BalanceOffset < -0.1f ? "Left ↓" : balanceController.BalanceOffset > 0.1f ? "Right ↓" : "Centered")}";
         }
         
         if (tPoseText != null && balanceController != null)
         {
-            // Show balance-based instructions instead of T-pose
-            if (balanceController.BalanceScore > 0.5f)
+            // Priority-based instructions for new system
+            if (!balanceController.HasGoodOrientation)
             {
-                if (isMoving)
-                    tPoseText.text = "Moving! Keep your balance!";
+                tPoseText.text = "Point controllers forward and horizontal!";
+            }
+            else if (!balanceController.HasGoodDistance)
+            {
+                tPoseText.text = "Spread arms wider (1.2m apart)!";
+            }
+            else if (!balanceController.IsBalanced)
+            {
+                if (balanceController.BalanceOffset < -0.1f)
+                    tPoseText.text = "Raise your LEFT arm!";
+                else if (balanceController.BalanceOffset > 0.1f)
+                    tPoseText.text = "Raise your RIGHT arm!";
                 else
-                    tPoseText.text = "Good balance - Ready to move!";
-            }
-            else if (balanceController.BalanceScore > 0.3f)
-            {
-                tPoseText.text = "Almost balanced - extend arms!";
-            }
-            else if (balanceController.BalanceScore > 0.1f)
-            {
-                tPoseText.text = "Spread arms out for balance";
+                    tPoseText.text = "Keep controllers level!";
             }
             else
             {
-                tPoseText.text = "Extend both arms to balance";
+                // All requirements met
+                float finalScore = balanceController.OrientationScore * balanceController.DistanceScore * balanceController.BalanceScore;
+                if (finalScore > 0.5f)
+                {
+                    if (isMoving)
+                        tPoseText.text = "Moving! Maintain horizontal pointers!";
+                    else
+                        tPoseText.text = "Perfect pose - Ready to move!";
+                }
+                else
+                {
+                    tPoseText.text = "Good pose! Keep position steady...";
+                }
             }
         }
     }

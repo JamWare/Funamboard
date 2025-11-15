@@ -13,6 +13,11 @@ public class BalanceController : MonoBehaviour
     public float balanceThreshold = 0.15f; // Maximum allowed deviation from perfect balance
     public float balanceSmoothing = 5f; // How quickly balance score changes
     
+    [Header("Orientation Settings")]
+    public float maxPointerAngleDeviation = 15f; // Max degrees from horizontal
+    public float minControllerDistance = 1.2f; // Minimum 1.2m separation
+    public bool requireBothPointers = true; // Whether both pointers need to be horizontal
+    
     [Header("Haptic Feedback")]
     public float minHapticStrength = 0.1f;
     public float maxHapticStrength = 0.8f;
@@ -22,7 +27,11 @@ public class BalanceController : MonoBehaviour
     // Public properties
     public float BalanceScore { get; private set; } = 1f; // 0 = completely unbalanced, 1 = perfect balance
     public float BalanceOffset { get; private set; } = 0f; // -1 = left side down, +1 = right side down
+    public float OrientationScore { get; private set; } = 1f; // 0 = pointers not horizontal, 1 = perfect horizontal
+    public float DistanceScore { get; private set; } = 1f; // 0 = too close, 1 = good separation
     public bool IsBalanced => BalanceScore > balanceThreshold;
+    public bool HasGoodOrientation => OrientationScore > 0.8f;
+    public bool HasGoodDistance => DistanceScore > 0.8f;
     
     // Events
     public System.Action<float, float> OnBalanceChanged; // balance score, balance offset
@@ -34,6 +43,8 @@ public class BalanceController : MonoBehaviour
     private float lastHapticTime;
     private float currentBalanceScore = 1f;
     private float currentBalanceOffset = 0f;
+    private float currentOrientationScore = 1f;
+    private float currentDistanceScore = 1f;
     
     void Start()
     {
@@ -60,50 +71,66 @@ public class BalanceController : MonoBehaviour
     
     void CalculateBalance()
     {
-        // Calculate controller positions relative to head
+        // 1. Calculate Orientation Score (pointer angles)
+        Vector3 leftPointer = leftController.forward;
+        Vector3 rightPointer = rightController.forward;
+        
+        // Check if pointers are horizontal (parallel to XZ plane)
+        float leftAngleFromHorizontal = Vector3.Angle(leftPointer, Vector3.ProjectOnPlane(leftPointer, Vector3.up));
+        float rightAngleFromHorizontal = Vector3.Angle(rightPointer, Vector3.ProjectOnPlane(rightPointer, Vector3.up));
+        
+        // Calculate orientation scores (1.0 when within maxPointerAngleDeviation, 0.0 when beyond)
+        float leftOrientationScore = 1f - Mathf.Clamp01(leftAngleFromHorizontal / maxPointerAngleDeviation);
+        float rightOrientationScore = 1f - Mathf.Clamp01(rightAngleFromHorizontal / maxPointerAngleDeviation);
+        
+        float targetOrientationScore;
+        if (requireBothPointers)
+        {
+            // Both pointers need to be horizontal
+            targetOrientationScore = Mathf.Min(leftOrientationScore, rightOrientationScore);
+        }
+        else
+        {
+            // At least one pointer needs to be horizontal
+            targetOrientationScore = Mathf.Max(leftOrientationScore, rightOrientationScore);
+        }
+        
+        // 2. Calculate Distance Score (1.2m separation)
+        float controllerDistance = Vector3.Distance(leftController.position, rightController.position);
+        float targetDistanceScore = Mathf.Clamp01(controllerDistance / minControllerDistance);
+        
+        // 3. Calculate Balance Score (height difference)
         Vector3 leftPos = leftController.position;
         Vector3 rightPos = rightController.position;
-        Vector3 headPos = headTransform.position;
-        
-        // Get the height difference of controllers relative to head height
-        float leftHeight = leftPos.y - headPos.y;
-        float rightHeight = rightPos.y - headPos.y;
-        
-        // Calculate horizontal distance from head (for T-pose detection)
-        Vector3 leftHorizontal = new Vector3(leftPos.x - headPos.x, 0, leftPos.z - headPos.z);
-        Vector3 rightHorizontal = new Vector3(rightPos.x - headPos.x, 0, rightPos.z - headPos.z);
-        
-        float leftDistance = leftHorizontal.magnitude;
-        float rightDistance = rightHorizontal.magnitude;
-        
-        // Calculate height difference between controllers
-        float heightDifference = rightHeight - leftHeight;
+        float heightDifference = rightPos.y - leftPos.y;
         
         // Calculate balance offset (-1 to 1)
-        float targetOffset = Mathf.Clamp(heightDifference * 2f, -1f, 1f);
+        float targetOffset = Mathf.Clamp(heightDifference * 3f, -1f, 1f); // More sensitive than before
         
-        // Smooth the balance offset
+        // Calculate balance score (1.0 when level, 0.0 when very unbalanced)
+        float targetBalanceScore = 1f - Mathf.Abs(heightDifference * 4f); // More sensitive
+        targetBalanceScore = Mathf.Clamp01(targetBalanceScore);
+        
+        // 4. Smooth all values
+        currentOrientationScore = Mathf.Lerp(currentOrientationScore, targetOrientationScore, Time.deltaTime * balanceSmoothing);
+        currentDistanceScore = Mathf.Lerp(currentDistanceScore, targetDistanceScore, Time.deltaTime * balanceSmoothing);
+        currentBalanceScore = Mathf.Lerp(currentBalanceScore, targetBalanceScore, Time.deltaTime * balanceSmoothing);
         currentBalanceOffset = Mathf.Lerp(currentBalanceOffset, targetOffset, Time.deltaTime * balanceSmoothing);
+        
+        // 5. Set public properties
+        OrientationScore = currentOrientationScore;
+        DistanceScore = currentDistanceScore;
+        BalanceScore = currentBalanceScore;
         BalanceOffset = currentBalanceOffset;
         
-        // Calculate balance score based on how level the controllers are
-        float targetScore = 1f - Mathf.Abs(heightDifference * 2f);
-        targetScore = Mathf.Clamp01(targetScore);
+        // 6. Calculate final combined score for movement (orientation × distance × balance)
+        float finalScore = OrientationScore * DistanceScore * BalanceScore;
         
-        // Also factor in horizontal symmetry (arms should be equally extended)
-        float distanceDifference = Mathf.Abs(leftDistance - rightDistance);
-        float distanceScore = 1f - Mathf.Clamp01(distanceDifference * 2f);
-        targetScore *= distanceScore;
-        
-        // Smooth the balance score
-        currentBalanceScore = Mathf.Lerp(currentBalanceScore, targetScore, Time.deltaTime * balanceSmoothing);
-        BalanceScore = currentBalanceScore;
-        
-        // Fire events
-        OnBalanceChanged?.Invoke(BalanceScore, BalanceOffset);
+        // Fire events with final score
+        OnBalanceChanged?.Invoke(finalScore, BalanceOffset);
         
         // Check for balance loss
-        if (BalanceScore < balanceThreshold && Mathf.Abs(BalanceOffset) > 0.1f)
+        if (finalScore < balanceThreshold && Mathf.Abs(BalanceOffset) > 0.1f)
         {
             OnBalanceLost?.Invoke(BalanceOffset < 0);
         }
@@ -114,11 +141,41 @@ public class BalanceController : MonoBehaviour
         if (Time.time - lastHapticTime < hapticInterval)
             return;
             
-        if (BalanceScore < balanceThreshold)
+        // Priority order: Orientation → Distance → Balance
+        
+        // 1. Check orientation issues (both controllers vibrate)
+        if (OrientationScore < 0.8f)
         {
-            // Calculate haptic strength based on how unbalanced we are
+            float orientationIssue = 1f - OrientationScore;
+            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength, orientationIssue);
+            
+            // Both controllers vibrate when orientation is wrong
+            if (leftHapticPlayer != null)
+                leftHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
+            if (rightHapticPlayer != null)
+                rightHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
+                
+            lastHapticTime = Time.time;
+        }
+        // 2. Check distance issues (both controllers vibrate)
+        else if (DistanceScore < 0.8f)
+        {
+            float distanceIssue = 1f - DistanceScore;
+            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength * 0.7f, distanceIssue); // Slightly weaker
+            
+            // Both controllers vibrate when too close together
+            if (leftHapticPlayer != null)
+                leftHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
+            if (rightHapticPlayer != null)
+                rightHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
+                
+            lastHapticTime = Time.time;
+        }
+        // 3. Check balance issues (individual controller vibrates)
+        else if (BalanceScore < 0.8f && Mathf.Abs(BalanceOffset) > 0.1f)
+        {
             float imbalance = 1f - BalanceScore;
-            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength, imbalance);
+            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength * 0.5f, imbalance); // Weakest
             
             // Vibrate the controller on the side that's out of balance
             if (BalanceOffset < -0.1f && leftHapticPlayer != null)
