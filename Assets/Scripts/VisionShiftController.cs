@@ -195,7 +195,8 @@ public class VisionShiftController : MonoBehaviour
         }
     }
     
-    // Debug visualization
+    // Debug visualization - commented out to remove visual artifacts
+    /*
     void OnDrawGizmos()
     {
         if (!Application.isPlaying || tiltTransform == null)
@@ -219,4 +220,5 @@ public class VisionShiftController : MonoBehaviour
             lastPoint = point;
         }
     }
+    */
 }

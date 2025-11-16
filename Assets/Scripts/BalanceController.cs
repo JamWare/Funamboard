@@ -174,7 +174,8 @@ public class BalanceController : MonoBehaviour
         currentBalanceOffset = Mathf.Clamp(currentBalanceOffset, -1f, 1f);
     }
     
-    // Debug visualization
+    // Debug visualization - commented out to remove visual artifacts
+    /*
     void OnDrawGizmos()
     {
         if (!Application.isPlaying || !leftController || !rightController || !headTransform)
@@ -195,4 +196,5 @@ public class BalanceController : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(headTransform.position, 0.15f);
     }
+    */
 }

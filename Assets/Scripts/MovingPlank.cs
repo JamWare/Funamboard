@@ -133,8 +133,8 @@ public class MovingPlank : MonoBehaviour
         balanceDisruptor = gameObject.AddComponent<BalanceDisruptor>();
         
         // Create vision shift controller
-        visionShiftController = gameObject.AddComponent<VisionShiftController>();
-        visionShiftController.xrCamera = headTransform;
+        // visionShiftController = gameObject.AddComponent<VisionShiftController>();
+        // visionShiftController.xrCamera = headTransform;
         
         // Initialize balance indicator if assigned in inspector
         if (balanceIndicator != null)
@@ -142,11 +142,11 @@ public class MovingPlank : MonoBehaviour
             balanceIndicator.Initialize(headTransform, balanceController, this);
         }
         
-        // Subscribe to balance events
-        if (balanceController)
-        {
-            balanceController.OnBalanceChanged += OnBalanceChanged;
-        }
+        // // Subscribe to balance events
+        // if (balanceController)
+        // {
+        //     balanceController.OnBalanceChanged += OnBalanceChanged;
+        // }
         
         Debug.Log("Simplified balance system initialized successfully!");
     }
@@ -586,6 +586,8 @@ public class MovingPlank : MonoBehaviour
         }
     }
     
+    // Debug visualization - commented out to remove visual artifacts
+    /*
     void OnDrawGizmosSelected()
     {
         // Draw rope path in editor
@@ -616,4 +618,5 @@ public class MovingPlank : MonoBehaviour
             Gizmos.DrawWireSphere(transform.position, detectionRange);
         }
     }
+    */
 }

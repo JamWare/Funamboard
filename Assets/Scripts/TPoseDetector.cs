@@ -205,7 +205,8 @@ public class TPoseDetector : MonoBehaviour
             return "Form T-Pose to begin";
     }
     
-    // Debug visualization
+    // Debug visualization - commented out to remove visual artifacts
+    /*
     void OnDrawGizmos()
     {
         if (!Application.isPlaying || !leftController || !rightController || !headTransform)
@@ -236,4 +237,5 @@ public class TPoseDetector : MonoBehaviour
         Gizmos.DrawLine(leftController.position, leftExpected);
         Gizmos.DrawLine(rightController.position, rightExpected);
     }
+    */
 }

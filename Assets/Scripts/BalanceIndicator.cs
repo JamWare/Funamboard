@@ -104,7 +104,8 @@ public class BalanceIndicator : MonoBehaviour
         
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * positionSmoothing);
         
-        targetRotation = Quaternion.LookRotation(transform.position - headTransform.position);
+        // Make the indicator face the player (reversed the direction)
+        targetRotation = Quaternion.LookRotation(headTransform.position - transform.position, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * positionSmoothing);
     }
     
