@@ -77,8 +77,8 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Leo Room.unity
     guid: 27db7de597d97c24fb816fd22b8ecb07
-  - enabled: 1
-    path: Assets/Low Poly Floating Islands/Scenes/01_Demo_Port.unity
+  - enabled: 0
+    path: Assets/Low Poly Floating Islands/Scenes/World#1.unity
     guid: 7b17746f6e2df48fe9ec78493abb584c
   - enabled: 0
     path: Assets/Low Poly Floating Islands/Scenes/02_Demo_River.unity
@@ -86,6 +86,9 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Low Poly Floating Islands/Scenes/03_Demo_Backyard.unity
     guid: 0887867ec23994430b4b7331698436c0
+  - enabled: 1
+    path: Assets/Scenes/World#1.unity
+    guid: b3c079fec31db427e8b4efb4f32b9af5
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: e3f999c3abbcc41c99f610f88fbd07bd, type: 2}
     Unity.XR.OpenVR.Settings: {fileID: 11400000, guid: 5d38af9b0bb79f242a67cf0b7307cace, type: 2}
