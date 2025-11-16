@@ -19,6 +19,7 @@ public class MovingPlank : MonoBehaviour
     
     [Header("Balance-Based Movement")]
     public bool useBalanceSystem = true;
+    public BalanceIndicator balanceIndicator; // Assign in inspector
     [Range(0f, 1f)]
     public float minBalanceForMovement = 0.3f; // Minimum balance score needed to move
     [Range(0f, 1f)]
@@ -134,6 +135,12 @@ public class MovingPlank : MonoBehaviour
         // Create vision shift controller
         visionShiftController = gameObject.AddComponent<VisionShiftController>();
         visionShiftController.xrCamera = headTransform;
+        
+        // Initialize balance indicator if assigned in inspector
+        if (balanceIndicator != null)
+        {
+            balanceIndicator.Initialize(headTransform, balanceController, this);
+        }
         
         // Subscribe to balance events
         if (balanceController)
