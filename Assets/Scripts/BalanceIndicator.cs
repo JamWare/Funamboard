@@ -29,6 +29,11 @@ public class BalanceIndicator : MonoBehaviour
     private bool shouldBeVisible = false;
     private Vector3 targetPosition;
     private Quaternion targetRotation;
+
+    // Static mode tracking
+    private bool isStaticMode = true;
+    private Vector3 staticPosition;
+    private float lastPlayerProgress = 0f;
     
     void Awake()
     {
@@ -58,18 +63,54 @@ public class BalanceIndicator : MonoBehaviour
         headTransform = head;
         balanceController = balance;
         movingPlank = plank;
-        
+
         if (!headTransform)
         {
             Debug.LogError("BalanceIndicator: Head transform is required!");
             enabled = false;
+            return;
+        }
+
+        // Calculate static position above the rope start point
+        if (movingPlank && movingPlank.startPoint)
+        {
+            // Get the rope direction from start to end
+            Vector3 ropeDirection = Vector3.forward; // Default fallback
+            if (movingPlank.endPoint)
+            {
+                ropeDirection = (movingPlank.endPoint.position - movingPlank.startPoint.position).normalized;
+                ropeDirection.y = 0; // Keep it horizontal
+                ropeDirection.Normalize();
+            }
+
+            // Position the indicator in front of the start point along the rope direction
+            staticPosition = movingPlank.startPoint.position + ropeDirection * distanceFromPlayer;
+            staticPosition.y = movingPlank.startPoint.position.y + verticalOffset;
+
+            // Set initial position immediately
+            transform.position = staticPosition;
+
+            // Initialize in static mode
+            isStaticMode = true;
+            lastPlayerProgress = movingPlank.GetCurrentPosition();
         }
     }
     
     void Update()
     {
         if (!headTransform || !indicatorImage) return;
-        
+
+        // Check if player has started moving along the rope
+        if (isStaticMode && movingPlank)
+        {
+            float currentProgress = movingPlank.GetCurrentPosition();
+            if (Mathf.Abs(currentProgress - lastPlayerProgress) > 0.001f)
+            {
+                // Player has moved, switch to follow mode
+                isStaticMode = false;
+            }
+        }
+
         UpdateVisibility();
         UpdatePosition();
         UpdateRotation();
@@ -90,20 +131,32 @@ public class BalanceIndicator : MonoBehaviour
     
     void UpdatePosition()
     {
+        // If in static mode, maintain the static position
+        if (isStaticMode)
+        {
+            transform.position = staticPosition;
+
+            // Make the indicator face the player even in static mode
+            targetRotation = Quaternion.LookRotation(headTransform.position - transform.position, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * positionSmoothing);
+            return;
+        }
+
+        // Follow mode: use existing player-following logic
         Vector3 forward = headTransform.forward;
         forward.y = 0;
         forward.Normalize();
-        
+
         if (forward.magnitude < 0.01f)
         {
             forward = headTransform.forward;
         }
-        
+
         targetPosition = headTransform.position + forward * distanceFromPlayer;
         targetPosition.y = headTransform.position.y + verticalOffset;
-        
+
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * positionSmoothing);
-        
+
         // Make the indicator face the player (reversed the direction)
         targetRotation = Quaternion.LookRotation(headTransform.position - transform.position, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * positionSmoothing);

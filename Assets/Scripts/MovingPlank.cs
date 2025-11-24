@@ -475,6 +475,11 @@ public class MovingPlank : MonoBehaviour
     {
         return isMoving;
     }
+
+    public float GetCurrentPosition()
+    {
+        return currentPosition;
+    }
     
     // Difficulty progression methods
     void UpdateDifficultyProgression()
