@@ -480,7 +480,44 @@ public class MovingPlank : MonoBehaviour
     {
         return currentPosition;
     }
-    
+
+    public void ResetPlank()
+    {
+        // Reset position along rope
+        currentPosition = 0f;
+        isMoving = false;
+        movingForward = true;
+        currentSpeed = 0f;
+
+        // Reset difficulty progression
+        if (difficultyProgressionEnabled)
+        {
+            difficultyMultiplier = 1f;
+            lastDifficultyIncreaseTime = Time.time;
+            journeyStartTime = Time.time;
+            lastBalancedTime = Time.time;
+            wasBalanced = false;
+            UpdateDisruptorSettings();
+        }
+
+        // Deactivate balance system
+        if (balanceController)
+        {
+            balanceController.IsActive = false;
+        }
+
+        // Reset balance disruptor
+        if (balanceDisruptor)
+        {
+            balanceDisruptor.StopAllDisruptions();
+        }
+
+        // Update plank position visually
+        UpdatePlankPosition();
+
+        Debug.Log("MovingPlank reset to initial state");
+    }
+
     // Difficulty progression methods
     void UpdateDifficultyProgression()
     {

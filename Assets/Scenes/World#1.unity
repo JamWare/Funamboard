@@ -769,6 +769,35 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8593246249389434039, guid: 9c16aca72d4d3485d8249d5a8d73fde8, type: 3}
   m_PrefabInstance: {fileID: 66053412}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &67497424
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 499046732}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1208362634}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &67497425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 499046732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b6af35352107485383bd0eb816f85eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SceneResetManager
+  leftSecondaryButton: {fileID: -5982496924579745919, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  rightSecondaryButton: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!1 &73161510
 GameObject:
   m_ObjectHideFlags: 0
@@ -1387,6 +1416,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 107738703223390684, guid: d6e9c84ede934442b8e0512bd6985d1e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 129444918}
+    - targetCorrespondingSourceObject: {fileID: 107738703223390684, guid: d6e9c84ede934442b8e0512bd6985d1e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 129444922}
   m_SourcePrefab: {fileID: 100100000, guid: d6e9c84ede934442b8e0512bd6985d1e, type: 3}
 --- !u!4 &129444911 stripped
 Transform:
@@ -1573,6 +1605,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.08563704, y: 0.09607033, z: 0.08144568}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &129444922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 129444912}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b06334ac97d724696a81ea220005f0e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TimedInteractable
+  quickClickThreshold: 0.3
+  useDestroyEffect: 1
+  destroyEffectDuration: 0.2
 --- !u!1001 &140242037
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6229,6 +6276,23 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: c596fbad0cbef4a8180fd1c8817dc1a5, type: 3}
   m_PrefabInstance: {fileID: 496529967}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &499046732
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 67497424}
+  - component: {fileID: 67497425}
+  m_Layer: 0
+  m_Name: SceneResetManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1001 &508630736
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13164,6 +13228,7 @@ Transform:
   - {fileID: 771629423}
   - {fileID: 590051359}
   - {fileID: 129444911}
+  - {fileID: 67497424}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1217077474
@@ -13561,23 +13626,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 1231721462}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e9f365cf844c03449bc8973eead2c3c1, type: 3}
+  m_Script: {fileID: 11500000, guid: 75b29b6c6428c984a8a73ffc2d58063b, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning.SnapTurnProvider
+  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.Locomotion.Turning.ContinuousTurnProvider
   m_Mediator: {fileID: 2043022939}
   m_TransformationPriority: 0
-  m_TurnAmount: 45
-  m_DebounceTime: 0.1
+  m_TurnSpeed: 60
   m_EnableTurnLeftRight: 1
-  m_EnableTurnAround: 1
-  m_DelayTime: 0
+  m_EnableTurnAround: 0
   m_LeftHandTurnInput:
     m_InputSourceMode: 2
     m_InputAction:
-      m_Name: Left Hand Snap Turn
+      m_Name: Left Hand Turn
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 816d2c5c-aed2-4e2b-b152-ee46506e6a27
+      m_Id: b02ce408-ef59-4ea1-8d1d-7abb2475b1e9
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
@@ -13588,10 +13651,10 @@ MonoBehaviour:
   m_RightHandTurnInput:
     m_InputSourceMode: 2
     m_InputAction:
-      m_Name: Right Hand Snap Turn
+      m_Name: Right Hand Turn
       m_Type: 0
       m_ExpectedControlType: Vector2
-      m_Id: 30d6b6ae-090c-417f-939d-4059e02e10ef
+      m_Id: 4022a5d3-1502-4177-8cc2-a3950d7f8c5d
       m_Processors: 
       m_Interactions: 
       m_SingletonActionBindings: []
