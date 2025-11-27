@@ -203,17 +203,30 @@ public class MovingPlank : MonoBehaviour
     
     public void AttachPlayerToPlank()
     {
-        if (!xrOrigin || playerAttached) return;
-        
+        if (!xrOrigin || playerAttached || !headTransform) return;
+
+        // Calculate head offset in world space BEFORE parenting
+        Vector3 headWorldPos = headTransform.position;
+        Vector3 originWorldPos = xrOrigin.position;
+        Vector3 headOffsetWorld = headWorldPos - originWorldPos;
+
+        // Calculate rope direction at current plank position
+        Vector3 ropeDirection = GetRopeDirection(currentPosition);
+        Quaternion targetRotation = Quaternion.LookRotation(ropeDirection, Vector3.up);
+
         playerAttached = true;
         
         // Parent the XR Origin to the plank
         xrOrigin.SetParent(transform);
-        
-        // Position player on top of plank
+
+        // Set rotation to match plank's rope-tangent direction
+        xrOrigin.rotation = targetRotation;
+
+        // Position with head offset compensation
+        // This ensures the HEAD ends up at plankTop, not the origin
         Vector3 plankTop = transform.position + Vector3.up * attachmentHeight;
-        xrOrigin.position = plankTop;
-        
+        xrOrigin.position = plankTop - headOffsetWorld;
+
         // Disable player movement while on plank
         DisablePlayerMovement();
         

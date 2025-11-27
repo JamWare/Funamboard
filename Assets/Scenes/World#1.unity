@@ -5000,6 +5000,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 832559297788336835, guid: 0a027659389c649a0819702c36983bdf, type: 3}
   m_PrefabInstance: {fileID: 346362507}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &350091197 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3862277631971027947, guid: 7ae956b4f54394e80818898d8f4d30c6, type: 3}
+  m_PrefabInstance: {fileID: 1929545845}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &357041505
 GameObject:
   m_ObjectHideFlags: 0
@@ -20800,13 +20805,30 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3862277631971027947, guid: 7ae956b4f54394e80818898d8f4d30c6, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1929545853}
   m_SourcePrefab: {fileID: 100100000, guid: 7ae956b4f54394e80818898d8f4d30c6, type: 3}
 --- !u!4 &1929545846 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1114260476483171701, guid: 7ae956b4f54394e80818898d8f4d30c6, type: 3}
   m_PrefabInstance: {fileID: 1929545845}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1929545853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 350091197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02a481bb70f354bbbb7399dd6b890817, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TPoseController
+  setTPoseOnStart: 1
+  armAngle: 90
 --- !u!1 &1937000893
 GameObject:
   m_ObjectHideFlags: 0
