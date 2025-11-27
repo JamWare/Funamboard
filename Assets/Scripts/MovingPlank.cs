@@ -212,25 +212,27 @@ public class MovingPlank : MonoBehaviour
 
         // Calculate rope direction at current plank position
         Vector3 ropeDirection = GetRopeDirection(currentPosition);
-        Quaternion targetRotation = Quaternion.LookRotation(ropeDirection, Vector3.up);
-
-        // Capture head's local rotation relative to XR Origin
-        // This preserves the player's natural head orientation relative to their tracking space
-        Quaternion headLocalRotation = headTransform.localRotation;
 
         playerAttached = true;
         
         // Parent the XR Origin to the plank
         xrOrigin.SetParent(transform);
 
-    
-        // Set rotation to match plank's rope-tangent direction
-        // Compensate for head's local rotation so the HEAD ends up facing the rope direction
-        // Formula: xrOrigin.rotation * headLocalRotation = targetRotation
-        // Therefore: xrOrigin.rotation = targetRotation * Inverse(headLocalRotation)
-        // xrOrigin.rotation = targetRotation * Quaternion.Inverse(headLocalRotation);
-        Quaternion rotation = xrOrigin.transform.rotation;
-        xrOrigin.transform.rotation = Quaternion.Euler(rotation.x, transform.rotation.eulerAngles.y, rotation.z);
+        // Calculate Y-axis rotation to align head with rope direction
+        // Step 1: Get head's current horizontal forward direction (world space)
+        Vector3 headForward = headTransform.forward;
+        Vector3 headForwardHorizontal = Vector3.ProjectOnPlane(headForward, Vector3.up).normalized;
+
+        // Step 2: Get rope's horizontal forward direction (world space)
+        Vector3 ropeForwardHorizontal = Vector3.ProjectOnPlane(ropeDirection, Vector3.up).normalized;
+
+        // Step 3: Calculate the signed angle between head and rope direction on Y-axis
+        float yawDifference = Vector3.SignedAngle(headForwardHorizontal, ropeForwardHorizontal, Vector3.up);
+
+        // Step 4: Create Y-axis only rotation and apply to XR Origin
+        // This preserves all other aspects of the player's current orientation
+        Quaternion yawRotation = Quaternion.Euler(0f, yawDifference, 0f);
+        xrOrigin.rotation = yawRotation * xrOrigin.rotation;
 
         // Position with head offset compensation
         // This ensures the HEAD ends up at plankTop, not the origin
