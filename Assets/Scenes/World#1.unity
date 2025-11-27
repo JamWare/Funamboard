@@ -925,6 +925,7 @@ MonoBehaviour:
   hapticMinStrength: 0.3
   hapticMaxStrength: 0.8
   hapticDuration: 0.2
+  hapticRepeatInterval: 0.5
 --- !u!65 &73161513
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5506,6 +5507,7 @@ MonoBehaviour:
   hapticMinStrength: 0.3
   hapticMaxStrength: 0.8
   hapticDuration: 0.2
+  hapticRepeatInterval: 0.5
 --- !u!65 &423227469
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -18425,7 +18427,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 22.535, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 291.4, y: 125.8}
+  m_AnchoredPosition: {x: 291.4, y: 267}
   m_SizeDelta: {x: 222.7318, y: 23.4797}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1705999947
@@ -20839,7 +20841,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 13.122, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 88.1, y: 120.9}
+  m_AnchoredPosition: {x: 88.1, y: 257}
   m_SizeDelta: {x: 208.1186, y: 28.3507}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1937000895

@@ -78,10 +78,12 @@ public class MovingPlank : MonoBehaviour
     public float hapticMinStrength = 0.3f;
     public float hapticMaxStrength = 0.8f;
     public float hapticDuration = 0.2f;
+    public float hapticRepeatInterval = 0.5f; // Time between vibrations while unbalanced
 
     private XRInputDevice leftInputDevice;
     private XRInputDevice rightInputDevice;
     private string lastBalanceMessage = "Centered";
+    private float lastHapticTime = -999f;
 
     // Private variables
     private float currentPosition = 0f; // 0 to 1 along rope
@@ -257,6 +259,7 @@ public class MovingPlank : MonoBehaviour
 
         // Reset haptic tracking
         lastBalanceMessage = "Centered";
+        lastHapticTime = -999f;
 
         // Unparent the XR Origin
         xrOrigin.SetParent(playerParent);
@@ -444,40 +447,51 @@ public class MovingPlank : MonoBehaviour
         else
             currentMessage = "Centered";
 
-        // Only trigger haptic when message changes
-        if (currentMessage != lastBalanceMessage && currentMessage != "Centered")
+        // If state changed to centered, reset timer
+        if (currentMessage == "Centered" && lastBalanceMessage != "Centered")
         {
-            Debug.Log($"[Haptic] Triggering haptic for: {currentMessage} (Offset: {balanceController.BalanceOffset:F3})");
+            Debug.Log("[Haptic] Returned to centered - stopping haptic feedback");
+            lastHapticTime = -999f;
+        }
 
-            // Calculate variable strength based on imbalance severity
-            float offsetMagnitude = Mathf.Abs(balanceController.BalanceOffset);
-            // Map 0.1-1.0 offset to hapticMinStrength-hapticMaxStrength
-            float normalizedOffset = (offsetMagnitude - 0.1f) / 0.9f;
-            float hapticStrength = Mathf.Lerp(hapticMinStrength, hapticMaxStrength, normalizedOffset);
+        // Continuous haptic feedback while unbalanced (every X seconds)
+        if (currentMessage != "Centered")
+        {
+            // Check if enough time has passed since last haptic
+            if (Time.time - lastHapticTime >= hapticRepeatInterval)
+            {
+                // Calculate variable strength based on imbalance severity
+                float offsetMagnitude = Mathf.Abs(balanceController.BalanceOffset);
+                // Map 0.1-1.0 offset to hapticMinStrength-hapticMaxStrength
+                float normalizedOffset = (offsetMagnitude - 0.1f) / 0.9f;
+                float hapticStrength = Mathf.Lerp(hapticMinStrength, hapticMaxStrength, normalizedOffset);
 
-            // Send haptic impulse to the appropriate controller
-            if (currentMessage == "Left ↓")
-            {
-                if (leftInputDevice.isValid && leftInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                // Send haptic impulse to the appropriate controller
+                if (currentMessage == "Left ↓")
                 {
-                    bool success = leftInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
-                    Debug.Log($"[Haptic] LEFT controller vibration sent (success: {success}, strength: {hapticStrength:F2}, duration: {hapticDuration:F2})");
+                    if (leftInputDevice.isValid && leftInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                    {
+                        bool success = leftInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
+                        Debug.Log($"[Haptic] LEFT controller vibration (success: {success}, strength: {hapticStrength:F2}, offset: {balanceController.BalanceOffset:F3})");
+                        lastHapticTime = Time.time;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[Haptic] LEFT controller not valid or doesn't support impulse");
+                    }
                 }
-                else
+                else if (currentMessage == "Right ↓")
                 {
-                    Debug.LogWarning($"[Haptic] LEFT controller not valid or doesn't support impulse");
-                }
-            }
-            else if (currentMessage == "Right ↓")
-            {
-                if (rightInputDevice.isValid && rightInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
-                {
-                    bool success = rightInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
-                    Debug.Log($"[Haptic] RIGHT controller vibration sent (success: {success}, strength: {hapticStrength:F2}, duration: {hapticDuration:F2})");
-                }
-                else
-                {
-                    Debug.LogWarning($"[Haptic] RIGHT controller not valid or doesn't support impulse");
+                    if (rightInputDevice.isValid && rightInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                    {
+                        bool success = rightInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
+                        Debug.Log($"[Haptic] RIGHT controller vibration (success: {success}, strength: {hapticStrength:F2}, offset: {balanceController.BalanceOffset:F3})");
+                        lastHapticTime = Time.time;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[Haptic] RIGHT controller not valid or doesn't support impulse");
+                    }
                 }
             }
         }
