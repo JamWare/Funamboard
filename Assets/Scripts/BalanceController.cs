@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Inputs.Haptics;
 
 public class BalanceController : MonoBehaviour
 {
@@ -17,13 +16,7 @@ public class BalanceController : MonoBehaviour
     public float maxPointerAngleDeviation = 15f; // Max degrees from horizontal
     public float minControllerDistance = 1.2f; // Minimum 1.2m separation
     public bool requireBothPointers = true; // Whether both pointers need to be horizontal
-    
-    [Header("Haptic Feedback")]
-    public float minHapticStrength = 0.1f;
-    public float maxHapticStrength = 0.8f;
-    public float hapticDuration = 0.1f;
-    public float hapticInterval = 0.5f; // Time between haptic pulses
-    
+
     // Public properties
     public bool IsActive { get; set; } = false; // Controls whether balance system is running
     public float BalanceScore { get; private set; } = 1f; // 0 = completely unbalanced, 1 = perfect balance
@@ -38,11 +31,8 @@ public class BalanceController : MonoBehaviour
     // Events
     public System.Action<float, float> OnBalanceChanged; // balance score, balance offset
     public System.Action<bool> OnBalanceLost; // true = left side, false = right side
-    
+
     // Private variables
-    private HapticImpulsePlayer leftHapticPlayer;
-    private HapticImpulsePlayer rightHapticPlayer;
-    private float lastHapticTime;
     private float currentBalanceScore = 1f;
     private float currentBalanceOffset = 0f;
     private float currentOrientationScore = 1f;
@@ -50,12 +40,6 @@ public class BalanceController : MonoBehaviour
     
     void Start()
     {
-        // Get HapticImpulsePlayer components for haptic feedback
-        if (leftController)
-            leftHapticPlayer = leftController.GetComponent<HapticImpulsePlayer>();
-        if (rightController)
-            rightHapticPlayer = rightController.GetComponent<HapticImpulsePlayer>();
-            
         if (!leftController || !rightController || !headTransform)
         {
             Debug.LogError("BalanceController: Missing controller or head references!");
@@ -67,9 +51,8 @@ public class BalanceController : MonoBehaviour
         // Only run balance calculations when active (player is on plank)
         if (!IsActive || !leftController || !rightController || !headTransform)
             return;
-            
+
         CalculateBalance();
-        UpdateHapticFeedback();
     }
     
     void CalculateBalance()
@@ -138,34 +121,7 @@ public class BalanceController : MonoBehaviour
             OnBalanceLost?.Invoke(BalanceOffset < 0);
         }
     }
-    
-    void UpdateHapticFeedback()
-    {
-        if (Time.time - lastHapticTime < hapticInterval)
-            return;
-            
-        // Only vibrate for left/right balance issues
-        if (BalanceScore < 0.8f && Mathf.Abs(BalanceOffset) > 0.1f)
-        {
-            float imbalance = 1f - BalanceScore;
-            float hapticStrength = Mathf.Lerp(minHapticStrength, maxHapticStrength, imbalance);
-            
-            // Vibrate the controller on the side that's out of balance
-            if (BalanceOffset < -0.1f && leftHapticPlayer != null)
-            {
-                // Left side is lower - vibrate left controller
-                leftHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
-            }
-            else if (BalanceOffset > 0.1f && rightHapticPlayer != null)
-            {
-                // Right side is lower - vibrate right controller
-                rightHapticPlayer.SendHapticImpulse(hapticStrength, hapticDuration);
-            }
-            
-            lastHapticTime = Time.time;
-        }
-    }
-    
+
     // Public method to apply external balance disruption
     public void ApplyDisruption(float amount, float direction)
     {

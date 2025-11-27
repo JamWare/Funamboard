@@ -195,30 +195,4 @@ public class VisionShiftController : MonoBehaviour
         }
     }
     
-    // Debug visualization - commented out to remove visual artifacts
-    /*
-    void OnDrawGizmos()
-    {
-        if (!Application.isPlaying || tiltTransform == null)
-            return;
-            
-        // Draw current tilt direction
-        Gizmos.color = Color.yellow;
-        Vector3 tiltDirection = tiltTransform.right * Mathf.Sign(currentTiltAngle);
-        Gizmos.DrawRay(tiltTransform.position, tiltDirection * 0.5f);
-        
-        // Draw tilt angle arc
-        Gizmos.color = Color.red;
-        float angleStep = 5f;
-        Vector3 lastPoint = tiltTransform.position + tiltTransform.forward * 0.5f;
-        
-        for (float angle = -maxTiltAngle; angle <= maxTiltAngle; angle += angleStep)
-        {
-            Quaternion rotation = Quaternion.AngleAxis(angle, tiltTransform.forward);
-            Vector3 point = tiltTransform.position + rotation * tiltTransform.right * 0.5f;
-            Gizmos.DrawLine(lastPoint, point);
-            lastPoint = point;
-        }
-    }
-    */
 }

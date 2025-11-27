@@ -3,6 +3,11 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using XRInputDevice = UnityEngine.XR.InputDevice;
+using XRNode = UnityEngine.XR.XRNode;
+using InputDevices = UnityEngine.XR.InputDevices;
+using HapticCapabilities = UnityEngine.XR.HapticCapabilities;
 
 public class MovingPlank : MonoBehaviour
 {
@@ -68,7 +73,16 @@ public class MovingPlank : MonoBehaviour
     private TPoseDetector tPoseDetector;
     private BalanceDisruptor balanceDisruptor;
     private VisionShiftController visionShiftController;
-    
+
+    [Header("Haptic Feedback")]
+    public float hapticMinStrength = 0.3f;
+    public float hapticMaxStrength = 0.8f;
+    public float hapticDuration = 0.2f;
+
+    private XRInputDevice leftInputDevice;
+    private XRInputDevice rightInputDevice;
+    private string lastBalanceMessage = "Centered";
+
     // Private variables
     private float currentPosition = 0f; // 0 to 1 along rope
     private bool playerAttached = false;
@@ -128,7 +142,10 @@ public class MovingPlank : MonoBehaviour
         balanceController.leftController = leftController;
         balanceController.rightController = rightController;
         balanceController.headTransform = headTransform;
-        
+
+        // Get input devices for haptic feedback
+        InitializeHapticDevices();
+
         // Create balance disruptor
         balanceDisruptor = gameObject.AddComponent<BalanceDisruptor>();
         
@@ -231,13 +248,16 @@ public class MovingPlank : MonoBehaviour
         
         playerAttached = false;
         isMoving = false;
-        
+
         // Deactivate balance system when player leaves plank
         if (balanceController)
         {
             balanceController.IsActive = false;
         }
-        
+
+        // Reset haptic tracking
+        lastBalanceMessage = "Centered";
+
         // Unparent the XR Origin
         xrOrigin.SetParent(playerParent);
         
@@ -255,7 +275,8 @@ public class MovingPlank : MonoBehaviour
         {
             UpdateBalanceBasedMovement();
             UpdateUIFeedback();
-            
+            UpdateHapticFeedback();
+
             if (difficultyProgressionEnabled)
             {
                 UpdateDifficultyProgression();
@@ -360,7 +381,110 @@ public class MovingPlank : MonoBehaviour
             }
         }
     }
-    
+
+    void InitializeHapticDevices()
+    {
+        // Get left hand controller
+        var leftDevices = new List<XRInputDevice>();
+        InputDevices.GetDevicesAtXRNode(XRNode.LeftHand, leftDevices);
+        if (leftDevices.Count > 0)
+        {
+            leftInputDevice = leftDevices[0];
+            if (leftInputDevice.TryGetHapticCapabilities(out HapticCapabilities leftCaps))
+            {
+                Debug.Log($"[Haptic Init] Left controller: {leftInputDevice.name}, Supports Impulse: {leftCaps.supportsImpulse}");
+            }
+            else
+            {
+                Debug.LogWarning("[Haptic Init] Left controller found but no haptic capabilities!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Haptic Init] No left hand controller found!");
+        }
+
+        // Get right hand controller
+        var rightDevices = new List<XRInputDevice>();
+        InputDevices.GetDevicesAtXRNode(XRNode.RightHand, rightDevices);
+        if (rightDevices.Count > 0)
+        {
+            rightInputDevice = rightDevices[0];
+            if (rightInputDevice.TryGetHapticCapabilities(out HapticCapabilities rightCaps))
+            {
+                Debug.Log($"[Haptic Init] Right controller: {rightInputDevice.name}, Supports Impulse: {rightCaps.supportsImpulse}");
+            }
+            else
+            {
+                Debug.LogWarning("[Haptic Init] Right controller found but no haptic capabilities!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Haptic Init] No right hand controller found!");
+        }
+    }
+
+    void UpdateHapticFeedback()
+    {
+        if (!balanceController || !playerAttached) return;
+
+        // Reinitialize devices if they're not valid (controller might have disconnected/reconnected)
+        if (!leftInputDevice.isValid || !rightInputDevice.isValid)
+        {
+            InitializeHapticDevices();
+        }
+
+        // Determine current balance message (same logic as UI display)
+        string currentMessage;
+        if (balanceController.BalanceOffset < -0.1f)
+            currentMessage = "Left ↓";
+        else if (balanceController.BalanceOffset > 0.1f)
+            currentMessage = "Right ↓";
+        else
+            currentMessage = "Centered";
+
+        // Only trigger haptic when message changes
+        if (currentMessage != lastBalanceMessage && currentMessage != "Centered")
+        {
+            Debug.Log($"[Haptic] Triggering haptic for: {currentMessage} (Offset: {balanceController.BalanceOffset:F3})");
+
+            // Calculate variable strength based on imbalance severity
+            float offsetMagnitude = Mathf.Abs(balanceController.BalanceOffset);
+            // Map 0.1-1.0 offset to hapticMinStrength-hapticMaxStrength
+            float normalizedOffset = (offsetMagnitude - 0.1f) / 0.9f;
+            float hapticStrength = Mathf.Lerp(hapticMinStrength, hapticMaxStrength, normalizedOffset);
+
+            // Send haptic impulse to the appropriate controller
+            if (currentMessage == "Left ↓")
+            {
+                if (leftInputDevice.isValid && leftInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                {
+                    bool success = leftInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
+                    Debug.Log($"[Haptic] LEFT controller vibration sent (success: {success}, strength: {hapticStrength:F2}, duration: {hapticDuration:F2})");
+                }
+                else
+                {
+                    Debug.LogWarning($"[Haptic] LEFT controller not valid or doesn't support impulse");
+                }
+            }
+            else if (currentMessage == "Right ↓")
+            {
+                if (rightInputDevice.isValid && rightInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                {
+                    bool success = rightInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
+                    Debug.Log($"[Haptic] RIGHT controller vibration sent (success: {success}, strength: {hapticStrength:F2}, duration: {hapticDuration:F2})");
+                }
+                else
+                {
+                    Debug.LogWarning($"[Haptic] RIGHT controller not valid or doesn't support impulse");
+                }
+            }
+        }
+
+        lastBalanceMessage = currentMessage;
+    }
+
     void MovePlankAlongRope()
     {
         if (!startPoint || !endPoint) return;
@@ -628,37 +752,4 @@ public class MovingPlank : MonoBehaviour
         }
     }
     
-    // Debug visualization - commented out to remove visual artifacts
-    /*
-    void OnDrawGizmosSelected()
-    {
-        // Draw rope path in editor
-        if (startPoint && endPoint)
-        {
-            Gizmos.color = Color.yellow;
-            
-            // Draw rope segments with sag
-            int segments = 20;
-            Vector3 lastPos = startPoint.position;
-            
-            for (int i = 1; i <= segments; i++)
-            {
-                float t = (float)i / segments;
-                Vector3 basePos = Vector3.Lerp(startPoint.position, endPoint.position, t);
-                float sag = ropeSagCurve.Evaluate(t) * maxSag;
-                Vector3 currentPos = basePos + Vector3.down * sag;
-                
-                Gizmos.DrawLine(lastPos, currentPos);
-                lastPos = currentPos;
-            }
-        }
-        
-        // Draw detection range
-        if (Application.isPlaying)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(transform.position, detectionRange);
-        }
-    }
-    */
 }
