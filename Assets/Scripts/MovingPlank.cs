@@ -40,7 +40,7 @@ public class MovingPlank : MonoBehaviour
     public Transform rightController; // Right hand controller
     public Transform headTransform; // XR Camera
     public float attachmentHeight = 0.1f; // How high above plank to place player
-    public float detectionRange = 3f; // Range to detect button press
+    public float detectionRange = 2f; // Range to detect button press
     
     [Header("XR Input")]
     public InputActionReference triggerAction; // Assign XRI RightHand/Primary Button action
@@ -181,7 +181,7 @@ public class MovingPlank : MonoBehaviour
         }
 
         // Handle attachment/detachment with same button
-        if (inputDetected && !playerAttached && IsPlayerNearPlank())
+        if (inputDetected && !playerAttached)
         {
             // Button pressed when not on board: get on the board
             AttachPlayerToPlank();
@@ -353,7 +353,7 @@ public class MovingPlank : MonoBehaviour
         if (balanceText != null && balanceController != null)
         {
             // Show detailed breakdown of all scores
-            string balanceInfo = $"Orientation: {(balanceController.OrientationScore * 100f):F0}%\n" +
+            string balanceInfo = 
                                $"Distance: {(balanceController.DistanceScore * 100f):F0}%\n" +
                                $"Balance: {(balanceController.BalanceScore * 100f):F0}%\n" +
                                $"Side: {(balanceController.BalanceOffset < -0.1f ? "Left ↓" : balanceController.BalanceOffset > 0.1f ? "Right ↓" : "Centered")}";
@@ -374,11 +374,7 @@ public class MovingPlank : MonoBehaviour
         if (tPoseText != null && balanceController != null)
         {
             // Priority-based instructions for new system
-            if (!balanceController.HasGoodOrientation)
-            {
-                tPoseText.text = "Point controllers forward and horizontal!";
-            }
-            else if (!balanceController.HasGoodDistance)
+            if (!balanceController.HasGoodDistance)
             {
                 tPoseText.text = "Spread arms wider (1.2m apart)!";
             }
@@ -394,7 +390,7 @@ public class MovingPlank : MonoBehaviour
             else
             {
                 // All requirements met
-                float finalScore = balanceController.OrientationScore * balanceController.DistanceScore * balanceController.BalanceScore;
+                float finalScore = balanceController.DistanceScore * balanceController.BalanceScore;
                 if (finalScore > 0.5f)
                 {
                     if (isMoving)

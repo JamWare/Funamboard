@@ -309,12 +309,16 @@ MonoBehaviour:
   itemSprite: {fileID: 0}
   isFull: 0
   isSelected: 0
+  itemDescription: 
+  itemDescriptionImage: {fileID: 0}
+  itemDescriptionNameText: {fileID: 0}
+  itemDescriptionText: {fileID: 0}
   quantityText: {fileID: 7763426847657884193}
   itemImage: {fileID: 4652573598152984315}
   selectedPanel: {fileID: 8370271413297633370}
   selectAction: {fileID: 3279264004350380116, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  useAction: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
-  dropAction: {fileID: 2798496385713780027, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  useAction: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  dropAction: {fileID: 83097790271614945, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!114 &841249447173207611
 MonoBehaviour:
   m_ObjectHideFlags: 0

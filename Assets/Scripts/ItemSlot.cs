@@ -35,7 +35,7 @@ public class ItemSlot : MonoBehaviour
     // 2. Action pour UTILISER (Primary Button / Activate)
     public InputActionReference useAction; 
     
-    // 3. Action pour DROP (Grip) - Optionnel si géré ailleurs, mais utile ici
+    // 3. Action pour DROP (Grip) -
     public InputActionReference dropAction;
 
     private XRSimpleInteractable _simpleInteractable;
@@ -78,13 +78,16 @@ public class ItemSlot : MonoBehaviour
         {
             if (useAction != null && useAction.action.WasPressedThisFrame())
             {
+                Debug.Log($"Use action pressed on slot {gameObject.name}");
                 UseItem();
             }
 
             if (dropAction != null && dropAction.action.WasPressedThisFrame())
             {
+                Debug.Log($"Drop action pressed on slot {gameObject.name}");
                 DropItem();
             }
+            
         }
     }
 
@@ -120,10 +123,35 @@ public class ItemSlot : MonoBehaviour
 
     private void UseItem()
     {
-        // if (!isFull) return;
-        Debug.Log($"Action USE sur {itemName}");
-        // Votre logique (ex: consommer potion)
+        Debug.Log($"Use item {itemName}");
+        Debug.Log(isFull);
+        if (!isFull) return;
+        
+        if (itemName == "Croissant")
+        {
+            if (AnimalFeeder.Instance != null && AnimalFeeder.Instance.isPlayerInZone)
+            {
+                if (GameManager.Instance != null)
+                {
+                    _inventoryManager.inventoryMenu.SetActive(false);
+                    GameManager.Instance.FeedAnimal();
+                }
+
+                quantity = 0;
+                if (quantity <= 0) ClearSlot();
+                else quantityText.text = quantity.ToString();
+            }
+            else
+            {
+                Debug.Log("Trop loin de l'animal pour le nourrir !");
+            }
+        }
+        else
+        {
+            Debug.Log($"Utilisé {itemName} (Pas pour l'animal)");
+        }
     }
+
 
     private void DropItem()
     {
@@ -137,6 +165,7 @@ public class ItemSlot : MonoBehaviour
         quantity = newQuantity;
         itemSprite = newItemSprite;
         itemDescription = newItemDescription;
+        isFull = quantity >= 5;
 
         if (itemImage != null) itemImage.sprite = itemSprite;
         
