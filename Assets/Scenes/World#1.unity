@@ -5495,8 +5495,8 @@ MonoBehaviour:
   locomotionSystem: {fileID: 2043022937}
   leftController: {fileID: 283357314}
   rightController: {fileID: 888308161}
-  headTransform: {fileID: 1918392459}
-  attachmentHeight: 0.1
+  headTransform: {fileID: 1012582521}
+  attachmentHeight: 1
   detectionRange: 3
   triggerAction: {fileID: 3279264004350380116, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   balanceText: {fileID: 1937000895}
@@ -15045,7 +15045,7 @@ Transform:
   m_GameObject: {fileID: 1373253471}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.4206503, z: -0, w: 0.90722287}
-  m_LocalPosition: {x: 28.12, y: 20.11, z: 30.6}
+  m_LocalPosition: {x: 28.395, y: 20.11, z: 31.717}
   m_LocalScale: {x: 0.6000001, y: 0.6, z: 0.6000001}
   m_ConstrainProportionsScale: 0
   m_Children:

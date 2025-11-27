@@ -214,13 +214,23 @@ public class MovingPlank : MonoBehaviour
         Vector3 ropeDirection = GetRopeDirection(currentPosition);
         Quaternion targetRotation = Quaternion.LookRotation(ropeDirection, Vector3.up);
 
+        // Capture head's local rotation relative to XR Origin
+        // This preserves the player's natural head orientation relative to their tracking space
+        Quaternion headLocalRotation = headTransform.localRotation;
+
         playerAttached = true;
         
         // Parent the XR Origin to the plank
         xrOrigin.SetParent(transform);
 
+    
         // Set rotation to match plank's rope-tangent direction
-        xrOrigin.rotation = targetRotation;
+        // Compensate for head's local rotation so the HEAD ends up facing the rope direction
+        // Formula: xrOrigin.rotation * headLocalRotation = targetRotation
+        // Therefore: xrOrigin.rotation = targetRotation * Inverse(headLocalRotation)
+        // xrOrigin.rotation = targetRotation * Quaternion.Inverse(headLocalRotation);
+        Quaternion rotation = xrOrigin.transform.rotation;
+        xrOrigin.transform.rotation = Quaternion.Euler(rotation.x, transform.rotation.eulerAngles.y, rotation.z);
 
         // Position with head offset compensation
         // This ensures the HEAD ends up at plankTop, not the origin
