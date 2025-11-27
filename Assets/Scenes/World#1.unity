@@ -14862,6 +14862,7 @@ GameObject:
   - component: {fileID: 1373253474}
   - component: {fileID: 1373253473}
   - component: {fileID: 1373253472}
+  - component: {fileID: 1373253475}
   m_Layer: 0
   m_Name: XR Origin (VR)
   m_TagString: Untagged
@@ -14930,6 +14931,23 @@ Transform:
   - {fileID: 2043022938}
   m_Father: {fileID: 2114144693}
   m_LocalEulerAnglesHint: {x: 0, y: 49.751, z: 0}
+--- !u!114 &1373253475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1373253471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93a664d61aa5d4540a7dc5e1777b6e28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIToggleManager
+  toggleButton: {fileID: -5982496924579745919, guid: c348712bda248c246b8c49b3db54643f, type: 3}
+  balanceText: {fileID: 1937000895}
+  tPoseText: {fileID: 1705999947}
+  movingPlank: {fileID: 423227468}
+  startVisible: 0
 --- !u!1001 &1375850512
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18281,16 +18299,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1705999945}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -52.6}
+  m_LocalRotation: {x: -0, y: 0.19538864, z: -0, w: 0.98072594}
+  m_LocalPosition: {x: 0, y: 0, z: 192.80006}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 590051359}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 22.535, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 141, y: 80.4}
+  m_AnchoredPosition: {x: 291.4, y: 125.8}
   m_SizeDelta: {x: 222.7318, y: 23.4797}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1705999947
@@ -20520,16 +20538,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1937000893}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 31.5}
+  m_LocalRotation: {x: -0, y: 0.11425677, z: -0, w: 0.9934513}
+  m_LocalPosition: {x: 0, y: 0, z: 237.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 590051359}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 13.122, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -104.9, y: 120.9}
+  m_AnchoredPosition: {x: 88.1, y: 120.9}
   m_SizeDelta: {x: 208.1186, y: 28.3507}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1937000895
