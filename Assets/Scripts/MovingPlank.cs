@@ -27,7 +27,7 @@ public class MovingPlank : MonoBehaviour
     public BalanceIndicator balanceIndicator; // Assign in inspector
     [Range(0f, 1f)]
     public float minBalanceForMovement = 0.3f; // Minimum balance score needed to move
-    [Range(0f, 1f)]
+    [Range(0f, 5f)]
     public float balanceSpeedMultiplier = 1f; // How much balance affects speed (0=no effect, 1=full effect)
     [Range(0f, 1f)]
     public float minSpeedWhenUnbalanced = 0.2f; // Minimum speed multiplier when unbalanced (instead of stopping)
