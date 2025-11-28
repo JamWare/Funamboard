@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Inputs.Haptics;
 
 public class BalanceDisruptor : MonoBehaviour
 {
@@ -40,13 +39,7 @@ public class BalanceDisruptor : MonoBehaviour
     public float oscillationFrequency = 1f;
     [Range(2f, 10f)]
     public float oscillationDuration = 4f;
-    
-    [Header("Warning Settings")]
-    public bool provideWarning = true;
-    public float warningTime = 0.5f; // Time before disruption
-    public float warningHapticStrength = 0.2f;
-    public float warningHapticDuration = 0.2f;
-    
+
     [Header("Probability Settings")]
     [Range(0f, 1f)]
     public float disruptionChance = 1f; // Probability that disruption will occur
@@ -54,9 +47,7 @@ public class BalanceDisruptor : MonoBehaviour
     
     // References
     private BalanceController balanceController;
-    private HapticImpulsePlayer leftHapticPlayer;
-    private HapticImpulsePlayer rightHapticPlayer;
-    
+
     // Events
     public System.Action<DisruptionType> OnDisruptionStarted;
     public System.Action OnDisruptionEnded;
@@ -101,13 +92,7 @@ public class BalanceDisruptor : MonoBehaviour
         baseDriftMinStrength = driftMinStrength;
         baseDriftMaxStrength = driftMaxStrength;
         baseOscillationAmplitude = oscillationAmplitude;
-        
-        // Get controller references for haptic feedback
-        if (balanceController.leftController)
-            leftHapticPlayer = balanceController.leftController.GetComponent<HapticImpulsePlayer>();
-        if (balanceController.rightController)
-            rightHapticPlayer = balanceController.rightController.GetComponent<HapticImpulsePlayer>();
-            
+
         ScheduleNextDisruption();
     }
     
@@ -187,15 +172,7 @@ public class BalanceDisruptor : MonoBehaviour
     IEnumerator SuddenGustCoroutine()
     {
         isDisrupting = true;
-        
-        // Warning phase
-        if (provideWarning)
-        {
-            OnDisruptionWarning?.Invoke();
-            ProvideWarningFeedback();
-            yield return new WaitForSeconds(warningTime);
-        }
-        
+
         OnDisruptionStarted?.Invoke(DisruptionType.SuddenGust);
         
         // Choose random direction and strength
@@ -220,15 +197,7 @@ public class BalanceDisruptor : MonoBehaviour
     IEnumerator GradualDriftCoroutine()
     {
         isDisrupting = true;
-        
-        // Warning phase
-        if (provideWarning)
-        {
-            OnDisruptionWarning?.Invoke();
-            ProvideWarningFeedback();
-            yield return new WaitForSeconds(warningTime);
-        }
-        
+
         OnDisruptionStarted?.Invoke(DisruptionType.GradualDrift);
         
         // Choose random direction and strength
@@ -255,15 +224,7 @@ public class BalanceDisruptor : MonoBehaviour
     IEnumerator OscillationCoroutine()
     {
         isDisrupting = true;
-        
-        // Warning phase
-        if (provideWarning)
-        {
-            OnDisruptionWarning?.Invoke();
-            ProvideWarningFeedback();
-            yield return new WaitForSeconds(warningTime);
-        }
-        
+
         OnDisruptionStarted?.Invoke(DisruptionType.Oscillation);
         
         // Apply oscillating disruption
@@ -285,16 +246,7 @@ public class BalanceDisruptor : MonoBehaviour
         OnDisruptionEnded?.Invoke();
         ScheduleNextDisruption();
     }
-    
-    void ProvideWarningFeedback()
-    {
-        // Quick haptic pulses to both controllers as warning
-        if (leftHapticPlayer)
-            leftHapticPlayer.SendHapticImpulse(warningHapticStrength, warningHapticDuration);
-        if (rightHapticPlayer)
-            rightHapticPlayer.SendHapticImpulse(warningHapticStrength, warningHapticDuration);
-    }
-    
+
     // Public methods for external control
     public void TriggerDisruption(DisruptionType type)
     {

@@ -3,6 +3,11 @@ using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using XRInputDevice = UnityEngine.XR.InputDevice;
+using XRNode = UnityEngine.XR.XRNode;
+using InputDevices = UnityEngine.XR.InputDevices;
+using HapticCapabilities = UnityEngine.XR.HapticCapabilities;
 
 public class MovingPlank : MonoBehaviour
 {
@@ -22,7 +27,7 @@ public class MovingPlank : MonoBehaviour
     public BalanceIndicator balanceIndicator; // Assign in inspector
     [Range(0f, 1f)]
     public float minBalanceForMovement = 0.3f; // Minimum balance score needed to move
-    [Range(0f, 1f)]
+    [Range(0f, 5f)]
     public float balanceSpeedMultiplier = 1f; // How much balance affects speed (0=no effect, 1=full effect)
     [Range(0f, 1f)]
     public float minSpeedWhenUnbalanced = 0.2f; // Minimum speed multiplier when unbalanced (instead of stopping)
@@ -35,7 +40,7 @@ public class MovingPlank : MonoBehaviour
     public Transform rightController; // Right hand controller
     public Transform headTransform; // XR Camera
     public float attachmentHeight = 0.1f; // How high above plank to place player
-    public float detectionRange = 3f; // Range to detect button press
+    public float detectionRange = 2f; // Range to detect button press
     
     [Header("XR Input")]
     public InputActionReference triggerAction; // Assign XRI RightHand/Primary Button action
@@ -68,7 +73,18 @@ public class MovingPlank : MonoBehaviour
     private TPoseDetector tPoseDetector;
     private BalanceDisruptor balanceDisruptor;
     private VisionShiftController visionShiftController;
-    
+
+    [Header("Haptic Feedback")]
+    public float hapticMinStrength = 0.3f;
+    public float hapticMaxStrength = 0.8f;
+    public float hapticDuration = 0.2f;
+    public float hapticRepeatInterval = 0.5f; // Time between vibrations while unbalanced
+
+    private XRInputDevice leftInputDevice;
+    private XRInputDevice rightInputDevice;
+    private string lastBalanceMessage = "Centered";
+    private float lastHapticTime = -999f;
+
     // Private variables
     private float currentPosition = 0f; // 0 to 1 along rope
     private bool playerAttached = false;
@@ -128,7 +144,10 @@ public class MovingPlank : MonoBehaviour
         balanceController.leftController = leftController;
         balanceController.rightController = rightController;
         balanceController.headTransform = headTransform;
-        
+
+        // Get input devices for haptic feedback
+        InitializeHapticDevices();
+
         // Create balance disruptor
         balanceDisruptor = gameObject.AddComponent<BalanceDisruptor>();
         
@@ -184,17 +203,42 @@ public class MovingPlank : MonoBehaviour
     
     public void AttachPlayerToPlank()
     {
-        if (!xrOrigin || playerAttached) return;
-        
+        if (!xrOrigin || playerAttached || !headTransform || !IsPlayerNearPlank()) return;
+
+        // Calculate head offset in world space BEFORE parenting
+        Vector3 headWorldPos = headTransform.position;
+        Vector3 originWorldPos = xrOrigin.position;
+        Vector3 headOffsetWorld = headWorldPos - originWorldPos;
+
+        // Calculate rope direction at current plank position
+        Vector3 ropeDirection = GetRopeDirection(currentPosition);
+
         playerAttached = true;
         
         // Parent the XR Origin to the plank
         xrOrigin.SetParent(transform);
-        
-        // Position player on top of plank
+
+        // Calculate Y-axis rotation to align head with rope direction
+        // Step 1: Get head's current horizontal forward direction (world space)
+        Vector3 headForward = headTransform.forward;
+        Vector3 headForwardHorizontal = Vector3.ProjectOnPlane(headForward, Vector3.up).normalized;
+
+        // Step 2: Get rope's horizontal forward direction (world space)
+        Vector3 ropeForwardHorizontal = Vector3.ProjectOnPlane(ropeDirection, Vector3.up).normalized;
+
+        // Step 3: Calculate the signed angle between head and rope direction on Y-axis
+        float yawDifference = Vector3.SignedAngle(headForwardHorizontal, ropeForwardHorizontal, Vector3.up);
+
+        // Step 4: Create Y-axis only rotation and apply to XR Origin
+        // This preserves all other aspects of the player's current orientation
+        Quaternion yawRotation = Quaternion.Euler(0f, yawDifference, 0f);
+        xrOrigin.rotation = yawRotation * xrOrigin.rotation;
+
+        // Position with head offset compensation
+        // This ensures the HEAD ends up at plankTop, not the origin
         Vector3 plankTop = transform.position + Vector3.up * attachmentHeight;
-        xrOrigin.position = plankTop;
-        
+        xrOrigin.position = plankTop - headOffsetWorld;
+
         // Disable player movement while on plank
         DisablePlayerMovement();
         
@@ -231,13 +275,17 @@ public class MovingPlank : MonoBehaviour
         
         playerAttached = false;
         isMoving = false;
-        
+
         // Deactivate balance system when player leaves plank
         if (balanceController)
         {
             balanceController.IsActive = false;
         }
-        
+
+        // Reset haptic tracking
+        lastBalanceMessage = "Centered";
+        lastHapticTime = -999f;
+
         // Unparent the XR Origin
         xrOrigin.SetParent(playerParent);
         
@@ -255,7 +303,8 @@ public class MovingPlank : MonoBehaviour
         {
             UpdateBalanceBasedMovement();
             UpdateUIFeedback();
-            
+            UpdateHapticFeedback();
+
             if (difficultyProgressionEnabled)
             {
                 UpdateDifficultyProgression();
@@ -360,7 +409,121 @@ public class MovingPlank : MonoBehaviour
             }
         }
     }
-    
+
+    void InitializeHapticDevices()
+    {
+        // Get left hand controller
+        var leftDevices = new List<XRInputDevice>();
+        InputDevices.GetDevicesAtXRNode(XRNode.LeftHand, leftDevices);
+        if (leftDevices.Count > 0)
+        {
+            leftInputDevice = leftDevices[0];
+            if (leftInputDevice.TryGetHapticCapabilities(out HapticCapabilities leftCaps))
+            {
+                Debug.Log($"[Haptic Init] Left controller: {leftInputDevice.name}, Supports Impulse: {leftCaps.supportsImpulse}");
+            }
+            else
+            {
+                Debug.LogWarning("[Haptic Init] Left controller found but no haptic capabilities!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Haptic Init] No left hand controller found!");
+        }
+
+        // Get right hand controller
+        var rightDevices = new List<XRInputDevice>();
+        InputDevices.GetDevicesAtXRNode(XRNode.RightHand, rightDevices);
+        if (rightDevices.Count > 0)
+        {
+            rightInputDevice = rightDevices[0];
+            if (rightInputDevice.TryGetHapticCapabilities(out HapticCapabilities rightCaps))
+            {
+                Debug.Log($"[Haptic Init] Right controller: {rightInputDevice.name}, Supports Impulse: {rightCaps.supportsImpulse}");
+            }
+            else
+            {
+                Debug.LogWarning("[Haptic Init] Right controller found but no haptic capabilities!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[Haptic Init] No right hand controller found!");
+        }
+    }
+
+    void UpdateHapticFeedback()
+    {
+        if (!balanceController || !playerAttached) return;
+
+        // Reinitialize devices if they're not valid (controller might have disconnected/reconnected)
+        if (!leftInputDevice.isValid || !rightInputDevice.isValid)
+        {
+            InitializeHapticDevices();
+        }
+
+        // Determine current balance message (same logic as UI display)
+        string currentMessage;
+        if (balanceController.BalanceOffset < -0.1f)
+            currentMessage = "Left ↓";
+        else if (balanceController.BalanceOffset > 0.1f)
+            currentMessage = "Right ↓";
+        else
+            currentMessage = "Centered";
+
+        // If state changed to centered, reset timer
+        if (currentMessage == "Centered" && lastBalanceMessage != "Centered")
+        {
+            Debug.Log("[Haptic] Returned to centered - stopping haptic feedback");
+            lastHapticTime = -999f;
+        }
+
+        // Continuous haptic feedback while unbalanced (every X seconds)
+        if (currentMessage != "Centered")
+        {
+            // Check if enough time has passed since last haptic
+            if (Time.time - lastHapticTime >= hapticRepeatInterval)
+            {
+                // Calculate variable strength based on imbalance severity
+                float offsetMagnitude = Mathf.Abs(balanceController.BalanceOffset);
+                // Map 0.1-1.0 offset to hapticMinStrength-hapticMaxStrength
+                float normalizedOffset = (offsetMagnitude - 0.1f) / 0.9f;
+                float hapticStrength = Mathf.Lerp(hapticMinStrength, hapticMaxStrength, normalizedOffset);
+
+                // Send haptic impulse to the appropriate controller
+                if (currentMessage == "Left ↓")
+                {
+                    if (leftInputDevice.isValid && leftInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                    {
+                        bool success = leftInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
+                        Debug.Log($"[Haptic] LEFT controller vibration (success: {success}, strength: {hapticStrength:F2}, offset: {balanceController.BalanceOffset:F3})");
+                        lastHapticTime = Time.time;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[Haptic] LEFT controller not valid or doesn't support impulse");
+                    }
+                }
+                else if (currentMessage == "Right ↓")
+                {
+                    if (rightInputDevice.isValid && rightInputDevice.TryGetHapticCapabilities(out HapticCapabilities caps) && caps.supportsImpulse)
+                    {
+                        bool success = rightInputDevice.SendHapticImpulse(0, hapticStrength, hapticDuration);
+                        Debug.Log($"[Haptic] RIGHT controller vibration (success: {success}, strength: {hapticStrength:F2}, offset: {balanceController.BalanceOffset:F3})");
+                        lastHapticTime = Time.time;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[Haptic] RIGHT controller not valid or doesn't support impulse");
+                    }
+                }
+            }
+        }
+
+        lastBalanceMessage = currentMessage;
+    }
+
     void MovePlankAlongRope()
     {
         if (!startPoint || !endPoint) return;
@@ -628,37 +791,4 @@ public class MovingPlank : MonoBehaviour
         }
     }
     
-    // Debug visualization - commented out to remove visual artifacts
-    /*
-    void OnDrawGizmosSelected()
-    {
-        // Draw rope path in editor
-        if (startPoint && endPoint)
-        {
-            Gizmos.color = Color.yellow;
-            
-            // Draw rope segments with sag
-            int segments = 20;
-            Vector3 lastPos = startPoint.position;
-            
-            for (int i = 1; i <= segments; i++)
-            {
-                float t = (float)i / segments;
-                Vector3 basePos = Vector3.Lerp(startPoint.position, endPoint.position, t);
-                float sag = ropeSagCurve.Evaluate(t) * maxSag;
-                Vector3 currentPos = basePos + Vector3.down * sag;
-                
-                Gizmos.DrawLine(lastPos, currentPos);
-                lastPos = currentPos;
-            }
-        }
-        
-        // Draw detection range
-        if (Application.isPlaying)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(transform.position, detectionRange);
-        }
-    }
-    */
 }

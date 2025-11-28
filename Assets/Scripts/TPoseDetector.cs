@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
-using UnityEngine.XR.Interaction.Toolkit.Inputs.Haptics;
 
 public class TPoseDetector : MonoBehaviour
 {
@@ -21,13 +20,7 @@ public class TPoseDetector : MonoBehaviour
     [Header("Detection Settings")]
     public float detectionSmoothing = 3f; // How quickly T-pose confidence changes
     public float holdDuration = 1f; // How long to hold T-pose before it's considered valid
-    
-    [Header("Feedback Settings")]
-    public float feedbackHapticStrength = 0.3f;
-    public float feedbackHapticDuration = 0.1f;
-    public Color goodPoseColor = Color.green;
-    public Color badPoseColor = Color.red;
-    
+
     // Public properties
     public bool IsInTPose { get; private set; }
     public float TPoseConfidence { get; private set; } // 0-1, where 1 is perfect T-pose
@@ -42,18 +35,9 @@ public class TPoseDetector : MonoBehaviour
     private float currentConfidence = 0f;
     private float tPoseStartTime = -1f;
     private bool wasInTPose = false;
-    private HapticImpulsePlayer leftHapticPlayer;
-    private HapticImpulsePlayer rightHapticPlayer;
-    private float lastFeedbackTime;
-    
+
     void Start()
     {
-        // Get HapticImpulsePlayer components for haptic feedback
-        if (leftController)
-            leftHapticPlayer = leftController.GetComponent<HapticImpulsePlayer>();
-        if (rightController)
-            rightHapticPlayer = rightController.GetComponent<HapticImpulsePlayer>();
-            
         if (!leftController || !rightController || !headTransform)
         {
             Debug.LogError("TPoseDetector: Missing controller or head references!");
@@ -64,10 +48,9 @@ public class TPoseDetector : MonoBehaviour
     {
         if (!leftController || !rightController || !headTransform)
             return;
-            
+
         CalculateTPoseConfidence();
         UpdateTPoseState();
-        ProvideFeedback();
     }
     
     void CalculateTPoseConfidence()
@@ -168,26 +151,7 @@ public class TPoseDetector : MonoBehaviour
         
         wasInTPose = IsInTPose;
     }
-    
-    void ProvideFeedback()
-    {
-        // Provide haptic feedback when approaching correct pose
-        if (TPoseConfidence > 0.4f && TPoseConfidence < 0.6f && !IsInTPose)
-        {
-            if (Time.time - lastFeedbackTime > 0.5f)
-            {
-                float hapticStrength = feedbackHapticStrength * TPoseConfidence;
-                
-                if (leftHapticPlayer)
-                    leftHapticPlayer.SendHapticImpulse(hapticStrength, feedbackHapticDuration);
-                if (rightHapticPlayer)
-                    rightHapticPlayer.SendHapticImpulse(hapticStrength, feedbackHapticDuration);
-                    
-                lastFeedbackTime = Time.time;
-            }
-        }
-    }
-    
+
     // Helper method to get pose quality for UI
     public string GetPoseQualityFeedback()
     {
