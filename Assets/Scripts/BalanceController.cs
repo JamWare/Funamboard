@@ -21,9 +21,11 @@ public class BalanceController : MonoBehaviour
     public bool IsActive { get; set; } = false; // Controls whether balance system is running
     public float BalanceScore { get; private set; } = 1f; // 0 = completely unbalanced, 1 = perfect balance
     public float BalanceOffset { get; private set; } = 0f; // -1 = left side down, +1 = right side down
+    public float OrientationScore { get; private set; } = 1f; // 0 = pointers not horizontal, 1 = perfect horizontal
     public float DistanceScore { get; private set; } = 1f; // 0 = too close, 1 = good separation
-    public float FinalScore => DistanceScore * BalanceScore; // Combined score for movement
+    public float FinalScore => OrientationScore * DistanceScore * BalanceScore; // Combined score for movement
     public bool IsBalanced => BalanceScore > balanceThreshold;
+    public bool HasGoodOrientation => OrientationScore > 0.8f;
     public bool HasGoodDistance => DistanceScore > 0.8f;
     
     // Events
@@ -96,17 +98,19 @@ public class BalanceController : MonoBehaviour
         targetBalanceScore = Mathf.Clamp01(targetBalanceScore);
         
         // 4. Smooth all values
+        currentOrientationScore = Mathf.Lerp(currentOrientationScore, targetOrientationScore, Time.deltaTime * balanceSmoothing);
         currentDistanceScore = Mathf.Lerp(currentDistanceScore, targetDistanceScore, Time.deltaTime * balanceSmoothing);
         currentBalanceScore = Mathf.Lerp(currentBalanceScore, targetBalanceScore, Time.deltaTime * balanceSmoothing);
         currentBalanceOffset = Mathf.Lerp(currentBalanceOffset, targetOffset, Time.deltaTime * balanceSmoothing);
         
         // 5. Set public properties
+        OrientationScore = currentOrientationScore;
         DistanceScore = currentDistanceScore;
         BalanceScore = currentBalanceScore;
         BalanceOffset = currentBalanceOffset;
         
         // 6. Calculate final combined score for movement (orientation × distance × balance)
-        float finalScore = DistanceScore * BalanceScore;
+        float finalScore = OrientationScore * DistanceScore * BalanceScore;
         
         // Fire events with final score
         OnBalanceChanged?.Invoke(finalScore, BalanceOffset);

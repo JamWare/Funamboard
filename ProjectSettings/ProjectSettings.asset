@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: Unity
-  productName: Modern Room
+  companyName: LeoJamil
+  productName: Funamboard
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -163,6 +163,8 @@ PlayerSettings:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 379812862120078693, guid: 252bea5c0aac647f381f7ac71f9619c7, type: 2}
+  - {fileID: -2518290970120935690, guid: 83269b782f201db48b7677797d4cb1a4, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -184,7 +186,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   androidMinAspectRatio: 1
   applicationIdentifier:
-    Android: com.Unity.ModernRoom
+    Android: com.LeoJamil.Funamboard
   buildNumber:
     Standalone: 0
     VisionOS: 0

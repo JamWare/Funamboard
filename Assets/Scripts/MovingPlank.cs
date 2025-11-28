@@ -181,7 +181,7 @@ public class MovingPlank : MonoBehaviour
         }
 
         // Handle attachment/detachment with same button
-        if (inputDetected && !playerAttached)
+        if (inputDetected && !playerAttached && IsPlayerNearPlank())
         {
             // Button pressed when not on board: get on the board
             AttachPlayerToPlank();
@@ -203,7 +203,7 @@ public class MovingPlank : MonoBehaviour
     
     public void AttachPlayerToPlank()
     {
-        if (!xrOrigin || playerAttached || !headTransform) return;
+        if (!xrOrigin || playerAttached || !headTransform || !IsPlayerNearPlank()) return;
 
         // Calculate head offset in world space BEFORE parenting
         Vector3 headWorldPos = headTransform.position;
@@ -353,7 +353,7 @@ public class MovingPlank : MonoBehaviour
         if (balanceText != null && balanceController != null)
         {
             // Show detailed breakdown of all scores
-            string balanceInfo = 
+            string balanceInfo = $"Orientation: {(balanceController.OrientationScore * 100f):F0}%\n" +
                                $"Distance: {(balanceController.DistanceScore * 100f):F0}%\n" +
                                $"Balance: {(balanceController.BalanceScore * 100f):F0}%\n" +
                                $"Side: {(balanceController.BalanceOffset < -0.1f ? "Left ↓" : balanceController.BalanceOffset > 0.1f ? "Right ↓" : "Centered")}";
@@ -374,7 +374,11 @@ public class MovingPlank : MonoBehaviour
         if (tPoseText != null && balanceController != null)
         {
             // Priority-based instructions for new system
-            if (!balanceController.HasGoodDistance)
+            if (!balanceController.HasGoodOrientation)
+            {
+                tPoseText.text = "Point controllers forward and horizontal!";
+            }
+            else if (!balanceController.HasGoodDistance)
             {
                 tPoseText.text = "Spread arms wider (1.2m apart)!";
             }
@@ -390,7 +394,7 @@ public class MovingPlank : MonoBehaviour
             else
             {
                 // All requirements met
-                float finalScore = balanceController.DistanceScore * balanceController.BalanceScore;
+                float finalScore = balanceController.OrientationScore * balanceController.DistanceScore * balanceController.BalanceScore;
                 if (finalScore > 0.5f)
                 {
                     if (isMoving)
